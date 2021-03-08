@@ -1,0 +1,13 @@
+#include <iostream>
+
+using namespace std;
+
+int main(int a, int b)
+{
+    int a, b;
+	char sample[] = "GeeksforGeeks";
+
+	cout << sample << " - A computer science portal for geeks";
+
+	return 0;
+}
