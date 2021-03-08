@@ -37,41 +37,32 @@ After pressing enter you can see the output on your terminal. First table lists 
 >## Terminal Output
 
 ```Shell
-Comments are ignored
-void : KeyWord
-add : Identifier
-( : special_char
-int : KeyWord
-c : Identifier
-) : special_char
-{ : special_char
-return : Keyword
-a : Identifier
-; : special_char
-} : special_char
-int : KeyWord
-main : Identifier
-( : special_char
-) : special_char
-{ : special_char
-add : Identifier
-( : special_char
-2 : Integer
-, : special_char
-3 : Integer
-) : special_char
-; : special_char
-} : special_char
+SYMBOL TABLE
 
-Number of entries in symbol table is 2
+lexeme - DataType
+add - int
 c - int
-a -
+a - int
+
+
+TOKEN TABLE
+
+Token - type
+int - Keyword
+add - Identifier
+c - Identifier
+a - Identifier
+return - Keyword
+main - Identifier
+2 - Num
+3 - Num
 ```
 ### Input Text File
 
 ```cpp
 /* This is a test program*/
-void add(int c){
+int add(int c){
+	int a;
     return a;
 }
 int main(){
