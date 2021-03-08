@@ -1,0 +1,16 @@
+/* The function is used to calculate the sum of two numbers*/
+int add(int a, int b)
+{
+	return  a+b; 
+}
+string print(string k, double bb = 9){
+	return k;
+}
+int main()   // main function
+{
+
+	string s = "naresh"; double l = 9;
+	float d = -5.999;
+	char pop = 'g';
+	int x = add(5.0, 7);
+}
