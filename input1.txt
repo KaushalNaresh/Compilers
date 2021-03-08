@@ -1,0 +1,22 @@
+/* naresh
+*/
+#include <iostream>
+
+using namespace std;
+
+int add(){/*
+hello
+*/
+
+	double 8e;
+}
+
+int main(int 9a, int b)
+{
+    int 9a, b;
+	char sample[] = "GeeksforGeeks";
+
+	cout << sample << " - A computer science portal for geeks";
+
+	return 0;
+}
