@@ -1,0 +1,12 @@
+int main()
+{
+    char a123; 
+  
+    float b;  
+ 
+    /* multiple declarations and definitions */
+    int _c, _d45, e; 
+ 
+    double d;
+
+}
