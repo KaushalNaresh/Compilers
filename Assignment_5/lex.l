@@ -1,0 +1,426 @@
+%{
+    #include<stdio.h>
+    #include<stdbool.h>
+    #include<string.h>
+    #include "prog.tab.h"
+    #define MAX 24
+    int count = 0;
+    int not_var_count = 0;
+    void add_symb_tab(char name[], char type[]);
+    void cache(char token[]);
+    char keywords[MAX][50] = {"short", "float", "double", "bool", "char", "signed", "unsigned", "for",
+                              "while", "do", "return", "void", "switch", "break", "case", "continue",
+                              "goto", "long", "static", "union", "default", "int", "if", "else"};
+    char dataType[][50] = {"short", "float", "double", "bool", "char", "signed", "unsigned"};
+    struct map
+    {
+        char lexeme[50];
+        char type[50];
+    };
+    struct map symb_tab[MAX];
+    char prevType[50];
+    char id_not_var[MAX][50];
+    bool isPrevId = false;
+    bool isVar = true;
+    char globalId[50] = "";
+    bool isRepeated = false;
+    FILE* file;
+    char** files;
+    int currFile = 0, maxFiles;
+    char* token;
+%}
+
+/*
+*   Definitions
+*/
+
+%option stack
+%s variableScope
+%s funcArgs
+%x singleLineComment
+%x strings
+%x library
+kwords  "for"|"while"|"do"|"return"|"switch"|"break"|"case"|"continue"|"goto"|"static"|"union"|"default"|"if"|"else"|"include"|"iostream"|"using"|"namespace"|"std"|"printf"
+dtype   "short"|"float"|"double"|"bool"|"char"|"signed"|"unsigned"|"int"|"void"|"long"|"string"
+digit [0-9]
+letter [a-zA-Z]
+us [_]
+us_letter_or_digit {us}|{digit}|{letter}
+us_or_letter {us}|{letter}
+special_char "{"|"}"|"["|"]"|"("|")"|","|";"|"#"
+Arithmatic_Operator "="|"+="|"-="|"/="|"*="|"+"|"-"|"*"|"/"
+Relational_Operator ">"|"<"|"<="|">="|"==" 
+variable_ending ";"| Arithmatic_Operator | Relational_Operator|","
+tabs_space_newline [\t \n]
+/*
+*   RULES
+*/
+
+%%
+\/\*([^*]|\*\/[^/])*\*\/                    {
+                                                printf("Comments are ignored\n");
+                                            }
+[-]?{digit}+                                {
+                                                // printf("%s : Integer\n", yytext);
+                                                yylval.str = strdup(yytext);
+                                                return INTEGER_CONSTANT;
+                                            }
+{digit}+("."{digit})?{digit}*{us_or_letter}{us_letter_or_digit}*                {
+                                                                                    printf("%s : Invalid token\n", yytext);
+                                                                                }
+[-]?{digit}+"."{digit}+                     {
+                                                // printf("%s : float\n", yytext);
+                                                yylval.str = strdup(yytext);
+                                                return FLOAT_CONSTANT;
+                                            }
+"printf"                                    {
+                                                return PRINT;
+                                            }
+"if"                                        {
+                                                // printf("%s : Keyword\n", yytext);
+                                                return IF;                                            
+                                            }
+"else"                                      {
+                                                // printf("%s : Keyword\n", yytext);
+                                                return ELSE;
+                                            }
+"else if"                                      {
+                                                // printf("%s : Keyword\n", yytext);
+                                                return ELSE_IF;
+                                            }
+"while"                                     {
+                                                // printf("%s : Keyword\n", yytext);
+                                                return WHILE;
+                                            }
+"return"                                    {
+                                                // printf("%s : Keyword\n", yytext);
+                                                return RETURN;
+                                            }
+"int"                                       {
+                                                strcat(prevType, yytext);
+                                                strcat(prevType, " ");
+                                                // printf("%s : KeyWord\n",yytext);
+                                                yylval.str = strdup(yytext);
+                                                return INT;
+                                            }
+"float"                                     {
+                                                strcat(prevType, yytext);
+                                                strcat(prevType, " ");
+                                                // printf("%s : KeyWord\n",yytext);
+                                                yylval.str = strdup(yytext);
+                                                return FLOAT;
+                                            }
+"string"                                     {
+                                                strcat(prevType, yytext);
+                                                strcat(prevType, " ");
+                                                // printf("%s : KeyWord\n",yytext);
+                                                yylval.str = strdup(yytext);
+                                                return STRING;
+                                            }
+"double"                                    {
+                                                strcat(prevType, yytext);
+                                                strcat(prevType, " ");
+                                                // printf("%s : KeyWord\n",yytext);
+                                                yylval.str = strdup(yytext);
+                                                return DOUBLE;
+                                            }
+"char"                                      {
+                                                strcat(prevType, yytext);
+                                                strcat(prevType, " ");
+                                                // printf("%s : KeyWord\n",yytext);
+                                                yylval.str = strdup(yytext);
+                                                return CHAR;
+                                            }
+"include"                                   {
+                                                yy_push_state(library);
+                                                return INCLUDE;
+                                            }
+<library>{
+                                            [\t ]*
+                                            "<"         return LT;
+                                            [^><]*      {
+                                                            yylval.str = strdup(yytext);
+                                                            return LIBRARY;
+                                                        }
+                                            ">"         {
+                                                            yy_pop_state();
+                                                            return GT;
+                                                        }
+}
+"'"(.){1}"'"                                {   
+                                                yylval.str = strdup(yytext);
+                                                return CHAR_CONSTANT;
+                                            }
+\"                                          {   
+                                                yy_push_state(strings);
+                                                return yytext[0];
+                                            }
+<strings>{
+                                            [^\"]*                                  {   
+                                                                                        // printf("strings %s\n", yytext);
+                                                                                        yylval.str = strdup(yytext);
+                                                                                        return STRING_CONST;
+                                                                            
+                                                                                    }
+                                            \"                                      {
+
+                                                                                        yy_pop_state();
+                                                                                        return yytext[0];
+                                                                                    }
+}
+"("                                         {
+                                                if(!isRepeated && isPrevId){
+                                                    count --;
+                                                    // printf("%s removed\n", symb_tab[count].lexeme);
+                                                    strcpy(symb_tab[count].lexeme, "");
+                                                    strcpy(symb_tab[count].lexeme, "");
+                                                }
+                                                isRepeated = false;
+                                                isPrevId = false;
+                                                memset(prevType,'\0', sizeof(prevType)); 
+                                                // printf("%s globalId\n", globalId);
+                                                cache(globalId);
+                                                strcpy(globalId, "");
+                                                // printf("%s : special_char\n", yytext);
+                                                yy_push_state(funcArgs);
+                                                return yytext[0];
+                                            }
+<funcArgs>{
+                                            ","                                    {
+                                                                                        // printf("%s : special_char\n", yytext);
+                                                                                        memset(prevType,'\0', sizeof(prevType));
+                                                                                        isPrevId = false;
+                                                                                        return COMMA;
+                                                                                    }
+                                            ")"                                     {
+                                                                                        // printf("%s : special_char\n", yytext);
+                                                                                        memset(prevType,'\0', sizeof(prevType));
+                                                                                        isPrevId = false;
+                                                                                        yy_pop_state();
+                                                                                        return yytext[0];
+                                                                                    }
+}
+"{"                                         {
+                                                // printf("%s : special_char\n", yytext);
+                                                yy_push_state(variableScope);  
+                                                return yytext[0];
+                                            }
+  
+<funcArgs,variableScope>{
+                                            {us_or_letter}{us_letter_or_digit}*     {
+                                                                                        // printf("%s : Identifier\n", yytext);
+                                                                                        add_symb_tab(yytext, prevType);
+                                                                                        isPrevId = true; 
+                                                                                        yylval.str = strdup(yytext);
+                                                                                        return ID;
+                                                                            
+                                                                                    }
+                                            ";"                                     {
+                                                                                        // printf("%s : special_char\n", yytext);
+                                                                                        isPrevId = false;
+                                                                                        memset(prevType,'\0', sizeof(prevType));
+                                                                                        return SEMICOLON;
+                                                                                    }
+                                            "}"                                     {
+                                                                                        // printf("%s : special_char\n", yytext);
+                                                                                        yy_pop_state();
+                                                                                        return yytext[0];
+                                                                                    }
+                                            ","                                     {
+                                                                                        // printf("%s : special_char\n", yytext);
+                                                                                        isPrevId = false;
+                                                                                        return COMMA;
+                                                                                    }                                                                                       
+}
+{us_or_letter}{us_letter_or_digit}*         {  
+                                                // printf("%s : Identifier\n", yytext);
+                                                add_symb_tab(yytext, prevType); 
+                                                strcpy(globalId, yytext);
+                                                isPrevId = true; 
+                                                yylval.str = strdup(yytext);
+                                                return ID;
+                                            }
+","                                         {
+                                                // printf("%s : special_char\n", yytext);
+                                                isPrevId = false;
+                                                return COMMA;
+                                            }
+";"                                         {
+                                                // printf("%s : special_char\n", yytext);
+                                                isPrevId = false;
+                                                memset(prevType,'\0', sizeof(prevType));
+                                                return SEMICOLON;
+                                            }                                           
+{tabs_space_newline}
+"+"                                         {
+                                                // printf("%s : Arithmetic Operator\n", yytext);
+                                                return ADD;
+                                            }
+"-"                                         {
+                                                // printf("%s : Arithmetic Operator\n", yytext);
+                                                return SUB;
+                                            }
+"*"                                         {
+                                                // printf("%s : Arithmetic Operator\n", yytext);
+                                                return MULTIPLY;
+                                            }
+"/"                                         {
+                                                // printf("%s : Arithmetic Operator\n", yytext);
+                                                return DIVIDE;
+                                            }
+"&&"                                        {
+                                                // printf("%s : Relational Operator\n", yytext);
+                                                return AND;
+                                            }
+"||"                                        {
+                                                // printf("%s : Relational Operator\n", yytext);
+                                                return OR;
+                                            }
+"!"                                         {
+                                                // printf("%s : Relational Operator\n", yytext);
+                                                return NOT;
+                                            }
+">"                                         {
+                                                // printf("%s : Relational Operator\n", yytext);
+                                                return GT;
+                                            }
+"<"                                         {
+                                                // printf("%s : Relational Operator\n", yytext);
+                                                return LT;
+                                            }
+"=="                                        {
+                                                // printf("%s : Relational Operator\n", yytext);
+                                                return EQ;
+                                            }
+">="                                        {
+                                                // printf("%s : Relational Operator\n", yytext);
+                                                return GE;
+                                            }
+"<="                                        {
+                                                // printf("%s : Relational Operator\n", yytext);
+                                                return LE;
+                                            }
+"!="                                        {
+                                                // printf("%s : Relational Operator\n", yytext);
+                                                return NE;
+                                            }
+"="                                         {
+                                                // printf("%s : Relational Operator\n", yytext);
+                                                return ASSIGN;
+                                            }
+"#"                                         {
+                                                // printf("%s : Special Symbol\n", yytext);
+                                                return yytext[0];
+                                            }
+
+
+%%
+
+/*
+*   storing non_variables in cache
+*/
+
+void cache(char* token){   
+    bool isPresent = false;
+    for(int i = 0; i < not_var_count; i++){
+        if(strcmp(id_not_var[i], token) == 0){
+            isPresent = true;
+            break;
+        }
+    }
+    if(!isPresent){
+        strcpy(id_not_var[not_var_count], token);
+        // printf("%s added in symbTable \n", token);
+        not_var_count++;
+    }
+}
+
+/*
+* Creating the symbol table
+*/
+
+void add_symb_tab(char* name, char* dtype){
+
+    for(int i = 0; i < not_var_count; i++){    // checking if identifier is function name
+        if(strcmp(name, id_not_var[i]) == 0){
+            isRepeated = true;
+            return;
+        }
+    }   
+
+    bool declared = false;
+    if(isPrevId){
+        for(int i = 0; i <= count-1; i++){    // To check if variable is declared
+            if(strcmp(symb_tab[i].lexeme, name) == 0){
+                declared = true;
+                return;
+            }
+        }
+    }
+
+    if(isPrevId && !declared){
+        // printf("%s %d %d not declared\n", name, isPrevId, declared);
+        strcpy(symb_tab[count].lexeme, name);
+        strcpy(symb_tab[count].type, "");
+        count++;
+        return;
+    }
+
+    bool isPresent = false;
+    for(int i = 0; i <= count-1; i++){       // Store variable in symbol Table
+        if(strcmp(symb_tab[i].lexeme, name) == 0){
+            isPresent = true;
+            break;
+        }
+    }
+
+    if(!isPresent){
+        strcpy(symb_tab[count].lexeme, name);
+        strcpy(symb_tab[count].type, dtype);
+        count ++;
+    }
+}
+
+/*
+*   Main Function
+*/
+
+// int main(int argc, char** argv)
+// {
+//     maxFiles = argc-1;
+//     files = (char**)malloc((argc-1)*sizeof(char*));
+
+//     for(int i = 1; i < argc; i++){
+//         files[i-1] = (char*)malloc(MAX*sizeof(char));
+//         strcpy(files[i-1], argv[i]);
+//     }
+
+//     file = fopen(files[0], "r");
+//     yyin = file;
+
+//     yylex();
+
+//     printf("All files are exhausted\n");
+   
+//     printf("\nNumber of entries in symbol table is %d\n",count);
+
+//     for(int i = 0; i <= count-1; i++){
+//         printf("%s - %s\n", symb_tab[i].lexeme, symb_tab[i].type);
+//     }   
+// }
+
+// int yywrap(){
+
+//     currFile++;
+//     if(file != NULL){
+//         fclose(file);
+//         file = NULL;
+//         printf("\nFile is closed\n\n");
+//     }
+//     if(currFile < maxFiles){
+//         file = fopen(files[currFile], "r");
+//         yyin = file;
+//     }
+
+//     return (file ? 0 : 1);
+// }

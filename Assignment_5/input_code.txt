@@ -1,0 +1,17 @@
+/*This is the sample code */
+#include<bits/stdc++.h>
+int main()
+{
+    char g = 'a';
+    int a, b, c;
+    if(c == b)
+        b = 2;
+    else if(!(a < b))
+    if(c != a || b < a)
+        a = 3;
+    else
+
+    while(a<b){
+        a = a+c;
+    }
+}
