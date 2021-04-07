@@ -1,0 +1,21 @@
+int add(int k, int l){
+
+    return k+1;
+}
+
+int main(){
+
+    int a;
+    string b;
+    double c;
+    string s = "naresh";
+    int g;
+    string d;
+    a = b + 2.567;
+    g = "kaushal";
+    if(a>b) {a = b+c;}else{ a = b - c;}
+    d = add(a, b);
+    while(a<b && 'c' == 'd'){ a = a+c+d;}
+    
+    printf("%d, %d", b, z);
+}
