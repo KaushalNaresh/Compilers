@@ -1,0 +1,9 @@
+int main()
+    beg
+        int a, b;
+        float c, d;
+        a = 6;
+        c = 7.0;
+        b = a*8;
+        d = c*6;
+    end
