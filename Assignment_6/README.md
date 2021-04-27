@@ -25,7 +25,7 @@ You need to install flex `sudo apt-get install flex` and must have gcc compiler 
 
 I have prepared a makefile which contains all the necessary commands to compile and run `.l` and `.y` file with input given in `input_code.txt` In order to run this parser unzip the file provided `Naresh_Kaushal.zip` After unzipping you will get a folder Naresh_Kaushal which contains 2 folders  
 1. `extra` folder contains `Makefile`, `input_code.txt`, `readme.pdf`  
-2. `c_assignment5_170030027` folder contains `lex.l` , `prog.y`.   
+2. `c_assignment6_170030027` folder contains `lex.l` , `prog.y`.   
 
 First you need to make new folder and put all the files in one folder. Now open console in the new folder you have created and enter the following command.
 
